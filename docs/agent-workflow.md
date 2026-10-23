@@ -1,33 +1,33 @@
-**中文** | [English](en/agent-workflow.md)
+**English** | [中文](zh/agent-workflow.md)
 
-# Agent 使用约定
+# Agent usage conventions
 
-用户入口是现有 MCP Agent。不要向用户暴露底层工具名；缺少关键尺寸、环境选择有歧义或几何意图不确定时，集中询问必要信息。
+The user entry point is the existing MCP agent. Do not show underlying tool names to the user. When a critical dimension is missing, an environment choice is ambiguous, or the geometric intent is uncertain, ask for the necessary information together.
 
-## 任务流程
+## Task flow
 
-1. 读取项目状态。明确目标、单位、参数来源、受保护尺寸与输出位置。
-2. 读取 `environment_status` 摘要。必要时 live 检查；不把缓存或握手当成 CAD 可用。
-3. 按零件选择后端，用 `capability_search` 搜索短英文关键词，再用 `operation_schema` 获取即将使用的参数。
-4. `execute_operations` 顺序执行，每批最多 25 项。依赖上一项返回 ID 的操作放在下一次请求。批处理不是事务，后续失败不会自动回滚已成功步骤。
-5. 检查结果摘要。完整日志按需读取。保存工程后重新打开，验证用户尺寸和受保护几何。
+1. Read the project state. Make the goal, units, parameter sources, protected dimensions, and output location explicit.
+2. Read the `environment_status` summary. Run a live check when needed. Do not treat a cache entry or a handshake as proof that CAD is usable.
+3. Choose a backend per part. Search `capability_search` with short English keywords, then use `operation_schema` to read the parameters you are about to use.
+4. Run `execute_operations` in order, at most 25 items per batch. An operation that depends on an ID returned by the previous item belongs in the next request. A batch is not a transaction. A later failure does not automatically roll back steps that already succeeded.
+5. Check the result summary. Read the full log when needed. After saving the project, open it again and verify the user's dimensions and the protected geometry.
 
-## 底板与持续修改
+## Base plate and continued edits
 
-`plate_workflow(project, action, hole_diameter)` 支持 create/edit/verify，仅适用于 120×80×5 mm、四孔距边 10 mm 的底板。不能将其他设计擅自替换为该配方。
+`plate_workflow(project, action, hole_diameter)` supports create, edit, and verify. It applies only to the 120×80×5 mm plate whose four holes are 10 mm from the edges. Do not substitute this recipe for a different design.
 
-`project_state` 返回持久参数与版本。工程使用相对路径；不能把会话 entity ID 当成永久标识。修改前重读尺寸名称、数值和几何；映射含糊则停止。
+`project_state` returns persistent parameters and versions. Projects use relative paths. A session entity ID is not a permanent identifier. Before an edit, reread dimension names, values, and geometry. Stop when the mapping is ambiguous.
 
-## 异常处理
+## Failures
 
-- 工具缺失或不兼容：报告能力缺口，不冒充完成。
-- 写操作超时：先读取实际 CAD 状态，明确判断依据，再调用 `reconcile_write`；它只解除阻塞，不重放请求。
-- 装配位置未知：保持 unknown，给候选或询问，不将打印布局称为装配。
-- 已打开文档：不执行关闭全部。配方只关闭自身工作副本，并恢复之前活动文档。
-- 通用接口具有上游写能力，并非文件系统沙箱；调用者负责用户授权和项目范围。串行锁不能阻止人或外部软件同时编辑。
+- Missing or incompatible tool: report the capability gap. Do not claim the task is complete.
+- Write timeout: read the actual CAD state first, state the evidence, then call `reconcile_write`. It only clears the block. It does not replay the request.
+- Unknown assembly position: keep it unknown, offer candidates or ask. Do not call a print layout an assembly.
+- Documents already open: do not close all of them. The recipe closes only its own working copy and restores the previously active document.
+- The generic interface has the upstream write capability. It is not a filesystem sandbox. The caller is responsible for user authorization and project scope. The serial lock cannot stop a person or another application from editing at the same time.
 
-## 缓存与成本
+## Cache and cost
 
-每次新连接刷新 schema；连接内五分钟过期，live 检查也刷新。缓存包含版本、配置与工具列表指纹，不代表当前连接健康。每个用户同一后端网关使用进程锁。
+Each new connection refreshes schemas. Within a connection they expire after five minutes, and a live check refreshes them too. The cache includes version, configuration, and tool-list fingerprints. It does not mean the current connection is healthy. Each user holds one process lock per backend gateway.
 
-默认只加载统一入口与任务相关 schema；大结果截断，完整结果通过 artifact 文件按需读取。图片仅用于补充几何检查。
+Load only the unified entry point and the schemas for the current task. Large results are truncated. Read the full result from the artifact file when needed. Images are only a supplement to the geometry check.

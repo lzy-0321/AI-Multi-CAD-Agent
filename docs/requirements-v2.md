@@ -1,666 +1,666 @@
-**中文** | [English](en/requirements-v2.md)
+**English** | [中文](zh/requirements-v2.md)
 
 # AI Multi-CAD Agent
-## 基于 MCP 的智能三维建模、逆向重建与自动装配系统
+## An MCP-based system for intelligent 3D modeling, reverse reconstruction, and automatic assembly
 
-**需求文档 v2.0**
-
----
-
-# 1. 项目概述
-
-## 1.1 项目定位
-
-开发一个基于 AI Agent 与 Model Context Protocol（MCP）的智能三维建模系统。
-
-系统能够接收自然语言、参考图片、3MF 文件及其他三维模型，自动理解用户的建模需求，分析模型的几何结构及最终用途，选择 SolidWorks、Blender 或两者协作完成任务。
-
-AI 不仅需要能够导入和修改已有模型，还需要具备**从零建模、参考模型逆向重建、参数化设计、自动装配以及持续迭代修改**的能力。
-
-系统最终以原生可编辑工程文件作为主要输出，而不仅仅是 STL、3MF 等网格交换文件。
-
-## 1.2 五大核心目标
-
-1. **多模态输入：** 接收自然语言、图片、3MF 或其他三维模型文件，支持组合输入。
-2. **智能分析：** 自动分析几何形状、结构复杂度、零件关系、建模难度、用户修改意图和最终用途。
-3. **软件自主选择：** 自动判断使用 SolidWorks、Blender，或两个软件协作，并允许不同零件选择不同建模方案。
-4. **自主执行：** 自动调用对应的 MCP，完成从零建模、逆向重建、参数修改、网格编辑、装配、检查和文件导出。
-5. **闭环优化：** 检查最终模型是否符合用户需求，不符合要求时自动定位问题、修改模型并重新验证。
-
-## 1.3 设计原则
-
-- **Intent First：** 根据用户实际目标选择工作流程，而不是仅根据文件格式判断。
-- **Editable First：** 优先生成可以继续修改的原生工程文件。
-- **Reconstruction First When Necessary：** 无法有效修改原模型时，主动选择重新建模。
-- **Part-Level Routing：** 在零件层级选择建模软件，而非整套模型只能使用一个软件。
-- **Non-destructive Workflow：** 保留原始输入和历史版本。
-- **Verifiable Results：** 建模结果需要通过几何、参数和装配验证。
-- **Human-in-the-Loop When Needed：** 高不确定性的几何或装配推断应允许用户确认。
+**Requirements v2.0**
 
 ---
 
-# 2. 输入系统
+# 1. Project overview
 
-## 2.1 自然语言输入
+## 1.1 Positioning
 
-用户可以直接描述需要创建的模型，也可以对已有模型提出修改要求。
+Build an intelligent 3D modeling system based on an AI agent and the Model Context Protocol (MCP).
 
-典型任务包括：
+The system accepts natural language, reference images, 3MF files, and other 3D models. It interprets the modeling request, analyzes geometry and the intended end use, and chooses SolidWorks, Blender, or both working together.
 
-### A. 从零建模
+The AI has to do more than import and modify an existing model. It also needs to model from scratch, reverse-reconstruct a reference, design parametrically, assemble automatically, and keep iterating.
 
-“帮我设计一个安装支架，底板长 120 mm、宽 80 mm、厚 5 mm，四个角各有一个直径 6 mm 的安装孔。”
+The primary output is a native, editable project file, not only a mesh exchange file such as STL or 3MF.
 
-系统应：
+## 1.2 Five core goals
 
-1. 分析几何和尺寸需求。
-2. 判断采用 SolidWorks 参数化建模。
-3. 自动建立草图、约束和特征。
-4. 检查尺寸。
-5. 保存 SLDPRT，并按需导出 STEP、STL。
+1. **Multimodal input:** accept natural language, images, 3MF, or other 3D model files, including combinations.
+2. **Intelligent analysis:** analyze shape, structural complexity, part relationships, modeling difficulty, the user's edit intent, and the end use.
+3. **Autonomous software choice:** decide whether to use SolidWorks, Blender, or both, and allow different parts to use different modeling approaches.
+4. **Autonomous execution:** call the matching MCP servers to model from scratch, reverse-reconstruct, change parameters, edit meshes, assemble, check, and export.
+5. **Closed-loop refinement:** check the finished model against the request. When it does not match, locate the problem, modify the model, and verify again.
 
-### B. 基于现有模型修改
+## 1.3 Design principles
 
-“把这个零件的安装孔直径从 5 mm 改成 8 mm，其他结构保持不变。”
+- **Intent First:** choose the workflow from the user's actual goal, not from the file format alone.
+- **Editable First:** prefer a native project file that can still be edited.
+- **Reconstruction First When Necessary:** when the original model cannot be edited effectively, choose to rebuild it.
+- **Part-Level Routing:** choose the modeling application per part. A whole model does not have to stay in one application.
+- **Non-destructive Workflow:** keep the original inputs and historical versions.
+- **Verifiable Results:** modeling results need geometric, parametric, and assembly checks.
+- **Human-in-the-Loop When Needed:** high-uncertainty geometry or assembly inferences should allow the user to confirm.
 
-系统首先判断现有模型是否能够直接编辑。
+---
 
-如果存在可修改的原生特征，优先直接修改参数。
+# 2. Input system
 
-如果输入仅为 3MF/STL 网格，或者原有特征无法可靠修改，则进行几何分析和必要的局部或完整重建，再执行修改。
+## 2.1 Natural language
 
-### C. 基于参考模型重新设计
+The user can describe a model to create, or request a change to a model that already exists.
 
-“参考这个 3MF 的外形，重新设计一个结构类似的外壳，但加厚底部，增加四个螺丝柱。”
+Typical tasks:
 
-系统将原始模型作为几何参考，而不是必须使用原始网格作为最终模型。
+### A. Model from scratch
 
-应识别主要外形、几何特征和关键尺寸，重建新的可编辑模型，并按要求添加或修改结构。
+"Design a mounting bracket. The base plate is 120 mm long, 80 mm wide, and 5 mm thick, with a 6 mm mounting hole at each of the four corners."
 
-### D. 多轮自然语言修改
+The system should:
 
-“把底部加厚到 4 mm。”
+1. Analyze the geometry and the dimensions.
+2. Choose parametric modeling in SolidWorks.
+3. Create the sketch, constraints, and features.
+4. Check the dimensions.
+5. Save an SLDPRT, and export STEP or STL when requested.
 
-“再把安装孔向内移动 3 mm。”
+### B. Modify an existing model
 
-“盖板和底座之间预留 0.3 mm 间隙。”
+"Change this part's mounting-hole diameter from 5 mm to 8 mm, and leave the rest of the structure unchanged."
 
-系统应能够在同一个项目中持续修改，不需要每次重新输入完整需求，也不应该无故丢失之前完成的设计修改。
+The system first decides whether the existing model can be edited directly.
 
-## 2.2 图片输入
+When native features can be modified, change the parameters directly.
 
-支持：
+When the input is only a 3MF or STL mesh, or the original features cannot be changed reliably, analyze the geometry and rebuild the affected region or the whole part, then apply the change.
 
-- 产品实拍照片。
-- 不同角度的参考图片。
-- 手绘草图。
-- 工程图与尺寸标注图。
-- 模型截图。
-- 装配说明图。
+### C. Redesign from a reference
 
-系统需要从图片中识别可能的三维形状、结构特征、对称关系、零件数量及尺寸信息。
+"Use this 3MF shape as a reference and redesign a similar enclosure, with a thicker base and four screw bosses."
 
-如果图片缺少尺寸，AI 可以建立初步模型，但应将无法确认的尺寸标记为估计值，不允许凭空将估计尺寸当成精确工程参数。
+The system treats the original model as a geometric reference. The original mesh does not have to become the final model.
 
-支持将图片与其他输入结合，例如：
+It should identify the main shape, geometric features, and key dimensions, rebuild a new editable model, and add or change structure as requested.
 
-“按照图片中的装配方式，将这个 3MF 里的零件组装起来。”
+### D. Multi-turn natural-language edits
 
-## 2.3 三维模型输入
+"Thicken the base to 4 mm."
 
-优先支持：
+"Move the mounting holes inward by 3 mm."
 
-| 格式 | 主要用途 |
+"Leave a 0.3 mm gap between the cover and the base."
+
+The system should keep editing the same project. The user should not have to restate the full request each time, and completed design changes should not be dropped without a reason.
+
+## 2.2 Images
+
+Supported inputs:
+
+- Product photographs.
+- Reference images from different angles.
+- Hand sketches.
+- Engineering drawings and dimensioned drawings.
+- Model screenshots.
+- Assembly illustrations.
+
+The system needs to identify likely 3D shape, structural features, symmetry, part count, and dimensions from the images.
+
+When an image has no dimensions, the AI may build a preliminary model, but unconfirmed dimensions must be marked as estimates. An estimate must not be treated as an exact engineering parameter.
+
+Images can be combined with other inputs, for example:
+
+"Assemble the parts in this 3MF the way the picture shows."
+
+## 2.3 3D model input
+
+Priority formats:
+
+| Format | Primary use |
 |---|---|
-| 3MF | 切片软件模型和分件项目 |
-| STL / OBJ | 网格参考与逆向建模 |
-| STEP / STP | CAD 实体参考与修改 |
-| SLDPRT | SolidWorks 原生零件 |
-| SLDASM | SolidWorks 原生装配体 |
-| BLEND | Blender 原生模型 |
+| 3MF | Slicer models and split-part projects |
+| STL / OBJ | Mesh reference and reverse modeling |
+| STEP / STP | CAD solid reference and edits |
+| SLDPRT | SolidWorks native part |
+| SLDASM | SolidWorks native assembly |
+| BLEND | Blender native model |
 
-其他格式可根据后端软件支持情况逐步扩展。
+Other formats can be added as backend software supports them.
 
-### 切片软件 3MF 特殊处理
+### Special handling for slicer 3MF files
 
-重点支持 Bambu Studio、OrcaSlicer 等软件。
+Focus on Bambu Studio, OrcaSlicer, and similar applications.
 
-需要提取：
+Extract:
 
-- 打印板及其对应模型。
-- 模型对象、独立零件和重复实例。
-- 零件名称、尺寸、单位及网格信息。
-- 零件相对变换及层级信息。
-- 可能存在的装配结构。
-- 与产品几何无关的支撑和打印辅助对象。
+- Build plates and the models on them.
+- Model objects, separate parts, and repeated instances.
+- Part names, dimensions, units, and mesh data.
+- Relative transforms and hierarchy.
+- Possible assembly structure.
+- Supports and print helpers that are not product geometry.
 
-由于打印平台上的零件可能已经被重新排列，不能默认其当前位置就是最终装配位置。
+Parts on a build plate may already have been rearranged. Their current positions are not the final assembly positions by default.
 
 ---
 
-# 3. 智能任务理解与规划
+# 3. Task understanding and planning
 
-## F01 — 自动意图识别
+## F01 — Automatic intent recognition
 
-系统收到输入后，需要判断用户真正希望完成的任务。
+After receiving input, the system decides what the user actually wants done.
 
-至少支持以下工作模式：
+At least these working modes:
 
-| 模式 | 说明 |
+| Mode | Description |
 |---|---|
-| Create | 根据文字或图片从零建模 |
-| Edit | 修改已有原生模型 |
-| Reconstruct | 根据网格、图片或参考几何重新建模 |
-| Reconstruct & Modify | 先逆向重建，再执行用户指定的结构与参数修改 |
-| Assemble | 将多个零件组织成装配体 |
-| Analyse | 检查模型结构、尺寸或可编辑性 |
-| Convert | 转换格式并尽可能保留几何和结构 |
-| Hybrid | 根据需要组合以上任务 |
+| Create | Model from scratch from text or images |
+| Edit | Modify an existing native model |
+| Reconstruct | Rebuild from a mesh, images, or reference geometry |
+| Reconstruct & Modify | Reverse-reconstruct first, then apply the requested structural and parametric changes |
+| Assemble | Organize multiple parts into an assembly |
+| Analyse | Inspect structure, dimensions, or editability |
+| Convert | Convert formats while preserving geometry and structure as far as possible |
+| Hybrid | Combine the tasks above as needed |
 
-这些工作模式可以组合，并不互斥。
+These modes can be combined. They are not mutually exclusive.
 
-例如，一个用户任务可以同时包含 Reconstruct、Modify、Assemble 和 Export。
+For example, one user task can include Reconstruct, Modify, Assemble, and Export together.
 
-## F02 — 自动生成任务计划
+## F02 — Automatic task plan
 
-AI 应先建立内部执行计划，再决定使用哪些 MCP。
+The AI builds an internal execution plan before choosing MCP servers.
 
-计划需要包含：
+The plan needs to include:
 
-- 用户最终目标。
-- 输入文件和参考资料。
-- 目标模型形式。
-- 需要新建或修改的零件。
-- 每个零件的建模方式。
-- 必须保持不变的几何特征。
-- 关键参数、约束和尺寸。
-- 装配关系。
-- 验证标准。
-- 输出格式和保存位置。
+- The user's final goal.
+- Input files and reference material.
+- The target model form.
+- Parts to create or modify.
+- The modeling method for each part.
+- Geometric features that must stay unchanged.
+- Key parameters, constraints, and dimensions.
+- Assembly relationships.
+- Verification criteria.
+- Output formats and save locations.
 
-任务计划应能够在执行过程中更新。
+The plan can be updated while the work runs.
 
-对于不确定的参数，应记录来源与可信程度。
-
----
-
-# 4. 智能建模软件选择
-
-## F03 — SolidWorks / Blender 自动路由
-
-系统需要根据模型类型、目标用途以及用户对可编辑性的要求自动选择执行软件。
-
-### SolidWorks 优先场景
-
-- 机械零件、支架、安装结构。
-- 精确尺寸、孔径、公差。
-- 外壳、盖板、机械连接结构。
-- 参数化编辑。
-- 零件装配和机械约束。
-- 工程图和制造用 CAD 几何。
-
-### Blender 优先场景
-
-- 有机曲面、雕塑和角色。
-- 游戏资产和场景模型。
-- 复杂网格编辑。
-- 拓扑重建、UV、纹理和材质。
-- 动画、渲染及视觉表现。
-- 不适合传统参数化 CAD 的自由形状。
-
-### 混合协作场景
-
-例如，一套产品包含机械底座与复杂造型外壳：
-
-1. SolidWorks 重建机械底座。
-2. Blender 处理复杂外壳。
-3. 通过明确的坐标、单位及几何交换格式协作。
-4. 按最终用途选择主工程文件。
-
-混合建模不意味着 Blender 网格可以无损变成 SolidWorks 参数化实体。系统必须识别跨软件转换限制。
-
-## F04 — 零件级智能选择
-
-同一个装配体内，不同零件可以采用不同建模方案。
-
-AI 应在零件级别生成：
-
-- 建模软件。
-- 建模方式。
-- 推荐模型表示形式。
-- 预计重建难度。
-- 可实现的编辑能力。
-- 转换风险。
-
-例如，外壳使用 Blender 网格重建，而螺丝安装座、支架和连接件通过 SolidWorks 参数化重建。
+Uncertain parameters should record their source and confidence.
 
 ---
 
-# 5. 自动建模与逆向重建
+# 4. Choosing the modeling application
 
-## F05 — 从零自动建模
+## F03 — Automatic SolidWorks / Blender routing
 
-AI 应支持仅使用文字、图片或两者的组合完成新模型创建。
+The system chooses the application from the model type, the intended use, and how editable the user needs the result to be.
 
-SolidWorks 路线应优先创建真正的 CAD 特征：
+### Prefer SolidWorks when
 
-- 基准面。
-- 草图。
-- 尺寸及几何约束。
-- 拉伸、旋转、切除。
-- 孔特征。
-- 圆角、倒角和阵列。
-- 必要的装配相关特征。
+- The work is a mechanical part, bracket, or mounting structure.
+- Exact dimensions, hole diameters, or tolerances matter.
+- The work is an enclosure, cover, or mechanical joint.
+- The result should be parametrically editable.
+- Parts need assembly and mechanical constraints.
+- The result is a drawing or CAD geometry for manufacturing.
 
-Blender 路线应支持：
+### Prefer Blender when
 
-- 网格创建。
-- 多对象结构。
-- 修改器。
-- 布尔运算。
-- 曲面建模。
-- 材质及纹理。
-- 自动渲染与预览。
+- The work is an organic surface, a sculpture, or a character.
+- The work is a game asset or a scene model.
+- The mesh edits are complex.
+- The work needs retopology, UVs, textures, or materials.
+- The work needs animation, rendering, or visual presentation.
+- The shape is freeform and does not fit traditional parametric CAD.
 
-## F06 — 3MF / STL 逆向重建
+### Mixed collaboration
 
-这是系统的核心功能之一。
+For example, a product with a mechanical base and a complex shaped enclosure:
 
-**3MF 中的三角网格通常能够进行网格级编辑，但不包含 SolidWorks 原始的尺寸约束、草图和特征历史。**
+1. SolidWorks rebuilds the mechanical base.
+2. Blender handles the complex enclosure.
+3. The two sides collaborate through explicit coordinates, units, and a geometry exchange format.
+4. The primary project file follows the end use.
 
-因此系统需要能够判断何时保留网格，何时应重新建模。
+Mixed modeling does not mean a Blender mesh can become a SolidWorks parametric solid without loss. The system must recognize cross-application conversion limits.
 
-### 逆向重建流程
+## F04 — Intelligent choice per part
 
-1. 分析原始网格。
-2. 提取独立零件。
-3. 识别基础形状及几何特征。
-4. 识别可能的对称关系、孔位、重复结构及连接面。
-5. 估计并记录关键尺寸。
-6. 选择适当的建模软件。
-7. 构建新的编辑模型。
-8. 对比原始模型和重建模型。
-9. 修正可识别的几何偏差。
-10. 保存原生工程文件。
+Inside one assembly, different parts can use different modeling approaches.
 
-### 重建等级
+At part level, the AI should record:
+
+- Modeling application.
+- Modeling method.
+- Recommended model representation.
+- Expected reconstruction difficulty.
+- Editing capability that can actually be delivered.
+- Conversion risk.
+
+For example, rebuild the enclosure as a Blender mesh, and rebuild screw bosses, brackets, and connectors as parametric SolidWorks parts.
+
+---
+
+# 5. Automatic modeling and reverse reconstruction
+
+## F05 — Automatic modeling from scratch
+
+The AI should be able to create a new model from text, images, or both.
+
+The SolidWorks route should prefer real CAD features:
+
+- Reference planes.
+- Sketches.
+- Dimensions and geometric constraints.
+- Extrude, revolve, and cut.
+- Hole features.
+- Fillets, chamfers, and patterns.
+- Assembly-related features when needed.
+
+The Blender route should support:
+
+- Mesh creation.
+- Multi-object structure.
+- Modifiers.
+- Boolean operations.
+- Surface modeling.
+- Materials and textures.
+- Automatic renders and previews.
+
+## F06 — 3MF / STL reverse reconstruction
+
+This is one of the core capabilities.
+
+**A triangle mesh in a 3MF can usually be edited as a mesh. It does not contain SolidWorks dimensions, sketches, or feature history.**
+
+The system therefore has to decide when to keep the mesh and when to rebuild.
+
+### Reverse-reconstruction flow
+
+1. Analyze the original mesh.
+2. Extract separate parts.
+3. Identify base shapes and geometric features.
+4. Identify likely symmetry, hole positions, repeated structure, and mating faces.
+5. Estimate and record key dimensions.
+6. Choose an appropriate modeling application.
+7. Build a new editable model.
+8. Compare the original model with the reconstruction.
+9. Correct geometric deviations that can be identified.
+10. Save a native project file.
+
+### Reconstruction levels
 
 **Level 1 — Editable Mesh**
 
-保留原始三角网格，通过 Blender 等软件编辑对象、顶点、面、形变和修改器。
+Keep the original triangle mesh and edit objects, vertices, faces, deformations, and modifiers in Blender or similar software.
 
 **Level 2 — Editable Geometry**
 
-根据原网格重建更易修改的网格结构、曲面或 CAD 实体，支持一定范围内的几何编辑。
+Rebuild a mesh structure, surfaces, or CAD solids that are easier to modify, and support geometric edits within a defined range.
 
 **Level 3 — Parametric Reconstruction**
 
-尽可能识别设计特征，并使用 SolidWorks 重建草图、特征、尺寸约束及参数关系。
+Identify design features as far as possible and rebuild sketches, features, dimensional constraints, and parameter relationships in SolidWorks.
 
-用户可以通过编辑关键尺寸来修改模型。
+The user can change the model by editing key dimensions.
 
-系统不应假设所有复杂网格都能成功恢复为参数化模型。
+The system must not assume that every complex mesh can be recovered as a parametric model.
 
-## F07 — 先重建再修改
+## F07 — Reconstruct, then modify
 
-这是一个独立的、需要优先支持的任务模式。
+This is a separate task mode and should be supported early.
 
-当用户输入 3MF 并要求修改某个原本无法参数化编辑的结构时，Agent 不应简单报错或停止。
+When the user supplies a 3MF and asks to change a structure that cannot be edited parametrically, the agent should not simply report an error and stop.
 
-例如：
+For example:
 
-“根据这个 3MF 重新做一个可以编辑的模型，并把外壳壁厚改成 3 mm，安装孔直径改为 5 mm。”
+"Rebuild an editable model from this 3MF, set the enclosure wall thickness to 3 mm, and change the mounting-hole diameter to 5 mm."
 
-正确执行流程：
+The correct flow:
 
-1. 读取 3MF。
-2. 识别需要修改的零件。
-3. 分析原始结构。
-4. 判断局部重建还是完整重建更合适。
-5. 重建包含目标特征的可编辑模型。
-6. 应用新的壁厚、孔径等参数。
-7. 检查修改是否影响其他结构。
-8. 必要时重新生成装配体。
-9. 保存新的原生工程文件。
+1. Read the 3MF.
+2. Identify the parts that need to change.
+3. Analyze the original structure.
+4. Decide whether a local rebuild or a full rebuild is more appropriate.
+5. Rebuild an editable model that contains the target features.
+6. Apply the new wall thickness, hole diameter, and other parameters.
+7. Check whether the change affects other structure.
+8. Regenerate the assembly when needed.
+9. Save a new native project file.
 
-**关键要求：重建必须服务于最终修改目标，而不是机械地先复制原模型，再重复处理所有原有结构。**
+**The reconstruction has to serve the final edit. It should not mechanically copy the original model and then reprocess every original structure.**
 
-如果某个模型的孔径即将修改，AI 可以在重新构建草图时直接使用目标孔径。
+If a hole diameter is about to change, the AI can use the target diameter directly while rebuilding the sketch.
 
-## F08 — 参数管理与持续编辑
+## F08 — Parameter management and continued editing
 
-系统需要维护统一的参数记录，例如：
+The system keeps one parameter record, for example:
 
-- 外壳长度。
-- 外壳宽度。
-- 壁厚。
-- 孔径。
-- 孔距。
-- 安装柱高度。
-- 配合间隙。
-- 阵列数量。
+- Enclosure length.
+- Enclosure width.
+- Wall thickness.
+- Hole diameter.
+- Hole spacing.
+- Boss height.
+- Fit clearance.
+- Pattern count.
 
-应区分：
+Distinguish:
 
-- 用户明确指定的参数。
-- 从原模型测量得到的参数。
-- 从图片推断出的参数。
-- AI 暂时采用的默认参数。
+- Parameters the user stated explicitly.
+- Parameters measured from the original model.
+- Parameters inferred from images.
+- Default parameters the AI is using for now.
 
-参数变化应触发受影响零件的更新和必要的重新验证。
+A parameter change should update the affected parts and trigger the necessary re-verification.
 
-对于 SolidWorks，应优先修改已有尺寸或特征；对于 Blender，可优先修改已有参数化修改器或重新生成相关网格。
-
----
-
-# 6. 分件识别与装配体重建
-
-## F09 — 自动识别零件
-
-针对多零件 3MF：
-
-- 保留源文件中的零件分组。
-- 识别重复零件与实例。
-- 判断某个网格是否是零件的一部分。
-- 区分打印辅助几何与实际产品。
-- 为每个零件分配唯一内部 ID。
-- 建立源零件与重建零件的对应关系。
-
-## F10 — 自动恢复装配意图
-
-当原始 3MF 仅包含打印平台分件时，系统应尝试推断其真实装配位置。
-
-可以结合：
-
-- 几何匹配。
-- 接触面分析。
-- 孔轴及槽位关系。
-- 对称结构。
-- 用户提供的产品照片。
-- 装配示意图。
-- 自然语言装配说明。
-
-需要生成装配关系及可信程度。
-
-对于多个合理的装配方案，可以生成候选方案，而不是强制选择一个未经验证的方案。
-
-## F11 — 自动创建 SolidWorks 装配体
-
-系统应支持：
-
-1. 创建独立 SLDPRT。
-2. 创建 SLDASM。
-3. 插入全部组件。
-4. 设置零件空间位置。
-5. 添加可可靠确定的装配约束。
-6. 检查干涉。
-7. 检查未约束自由度。
-8. 保存装配体及依赖零件文件。
-
-对于复杂网格，允许先输出保留正确位置的装配体，再逐步生成更完整的机械 Mates。
-
-## F12 — 装配关系与参数联动
-
-当用户修改零件参数时，需要检查是否影响装配关系。
-
-例如：
-
-“把转轴直径从 6 mm 改成 8 mm。”
-
-系统需要识别受影响的轴孔、轴承或连接件，根据用户意图判断是否需要联动修改，并检查新的机械配合是否有效。
-
-不能未经用户授权就改变原本明确要求保持不变的尺寸。
+For SolidWorks, prefer editing an existing dimension or feature. For Blender, prefer editing an existing parametric modifier or regenerating the related mesh.
 
 ---
 
-# 7. MCP 自动执行系统
+# 6. Part identification and assembly reconstruction
 
-## F13 — 统一 MCP 调度
+## F09 — Automatic part identification
 
-AI Agent 应统一管理多个 MCP Server：
+For a multi-part 3MF:
 
-- 3MF 分析 MCP / 解析服务。
-- Blender MCP。
-- SolidWorks MCP。
-- 几何验证服务。
-- 文件管理与转换工具。
+- Keep the part grouping from the source file.
+- Identify repeated parts and instances.
+- Decide whether a mesh is only part of a part.
+- Separate print-helper geometry from the actual product.
+- Assign each part a unique internal ID.
+- Record the correspondence between source parts and rebuilt parts.
 
-用户不需要手动选择、切换或直接调用 MCP。
+## F10 — Recover assembly intent
 
-Orchestrator 根据任务计划自动决定使用哪些能力。
+When the original 3MF only contains parts laid out on a build plate, the system should try to infer the real assembly positions.
 
-## F14 — 工具能力识别
+Evidence can include:
 
-系统不能假设所有 MCP 版本都支持相同操作。
+- Geometric matching.
+- Contact-face analysis.
+- Hole axes and slot relationships.
+- Symmetry.
+- Product photos supplied by the user.
+- Assembly diagrams.
+- Natural-language assembly instructions.
 
-执行前需要判断：
+Produce assembly relationships and a confidence level.
 
-- 当前软件是否已经启动。
-- MCP 是否连接成功。
-- 所需工具是否可用。
-- 当前文件是否能够导入。
-- 目标输出格式是否支持。
-- 某项操作是否需要用户确认。
+When several assembly arrangements are reasonable, generate candidates. Do not force one unverified arrangement.
 
-遇到工具能力不足时，可以选择其他执行路径或明确报告限制。
+## F11 — Create a SolidWorks assembly
 
-## F15 — 过程管理与失败恢复
+The system should support:
 
-支持：
+1. Creating separate SLDPRT files.
+2. Creating an SLDASM.
+3. Inserting every component.
+4. Placing parts in space.
+5. Adding assembly constraints that can be determined reliably.
+6. Checking interference.
+7. Checking unconstrained degrees of freedom.
+8. Saving the assembly and its dependent part files.
 
-- 分步骤执行。
-- 保存中间结果。
-- 根据工具返回结果调整计划。
-- 捕获导入、建模和装配错误。
-- 对可恢复错误进行有限次数的重试。
-- 失败后尽可能保留已完成的模型。
-- 在后续任务中继续编辑。
+For a complex mesh, it is acceptable to output an assembly that preserves the correct positions first, then add more complete mechanical mates step by step.
 
-对具有不可逆风险的覆盖、删除或批量修改操作，应要求适当确认。
+## F12 — Assembly relationships and parameter coupling
 
----
+When the user changes a part parameter, check whether assembly relationships are affected.
 
-# 8. 自动检查与迭代优化
+For example:
 
-## F16 — 几何验证
+"Change the shaft diameter from 6 mm to 8 mm."
 
-根据用户要求验证：
+The system needs to identify the affected shaft holes, bearings, or connectors, decide from the user's intent whether coupled edits are required, and check that the new mechanical fit is valid.
 
-- 尺寸。
-- 单位。
-- 体积。
-- 零件数量。
-- 孔径、孔距和壁厚。
-- 网格完整性。
-- CAD 实体有效性。
-- 与参考模型的表面偏差。
-- 是否存在非预期几何变化。
-
-用户明确指定的尺寸应作为优先验收依据。
-
-对于参考模型逆向重建，几何相似度容差应可以按项目配置。
-
-## F17 — 视觉检查
-
-AI 自动生成模型截图或渲染：
-
-- 正面。
-- 侧面。
-- 顶面。
-- 透视角度。
-- 必要的剖面。
-- 装配体及爆炸视图。
-
-结合几何检查和视觉检查判断模型是否符合要求。
-
-视觉相似不能取代工程尺寸验证。
-
-## F18 — 自主修正循环
-
-基本流程：
-
-**建模 → 检查 → 发现问题 → 分析原因 → 修改 → 重新检查**
-
-系统应支持反复执行该流程，直至：
-
-- 达到验收标准。
-- 达到配置的重试上限。
-- 遇到无法自动解决的问题。
-- 需要用户补充信息或确认设计意图。
-
-应避免无限循环和未经控制的大规模重建。
-
-## F19 — 用户反馈与多轮迭代
-
-用户可以在任意阶段提出修改：
-
-“外壳太厚了。”
-
-“这个位置应该有一个开口。”
-
-“螺丝柱应该和底座连接。”
-
-“这个零件我想改成参数化模型。”
-
-AI 应理解当前项目状态，决定是修改现有特征、编辑网格、局部重建还是重新创建零件。
-
-优先只修改受影响的部分，并保留其他已通过验证的结果。
+Do not change a dimension the user explicitly asked to keep unchanged, unless the user authorizes that change.
 
 ---
 
-# 9. 统一系统架构
+# 7. Automatic MCP execution
 
-建议采用以下模块：
+## F13 — Unified MCP dispatch
+
+The AI agent manages multiple MCP servers together:
+
+- 3MF analysis MCP or parsing service.
+- Blender MCP.
+- SolidWorks MCP.
+- Geometry verification service.
+- File management and conversion tools.
+
+The user does not choose, switch, or call MCP servers by hand.
+
+The orchestrator decides which capabilities to use from the task plan.
+
+## F14 — Tool capability detection
+
+The system cannot assume that every MCP version supports the same operations.
+
+Before execution, determine:
+
+- Whether the current application is already running.
+- Whether the MCP connection succeeded.
+- Whether the required tool is available.
+- Whether the current file can be imported.
+- Whether the target output format is supported.
+- Whether an operation needs user confirmation.
+
+When a tool cannot do the job, choose another execution path or report the limit explicitly.
+
+## F15 — Process management and failure recovery
+
+Support:
+
+- Step-by-step execution.
+- Saving intermediate results.
+- Adjusting the plan from tool results.
+- Capturing import, modeling, and assembly errors.
+- A limited number of retries for recoverable errors.
+- Keeping completed model work after a failure, as far as possible.
+- Continuing to edit in a later task.
+
+Overwrite, delete, and bulk-edit operations that can be irreversible should ask for an appropriate confirmation.
+
+---
+
+# 8. Automatic checking and iterative refinement
+
+## F16 — Geometric verification
+
+Check against the user's request:
+
+- Dimensions.
+- Units.
+- Volume.
+- Part count.
+- Hole diameter, hole spacing, and wall thickness.
+- Mesh integrity.
+- CAD solid validity.
+- Surface deviation from the reference model.
+- Unexpected geometric changes.
+
+Dimensions the user stated explicitly are the primary acceptance criteria.
+
+For reverse reconstruction from a reference, the geometric-similarity tolerance should be configurable per project.
+
+## F17 — Visual check
+
+The AI generates screenshots or renders:
+
+- Front.
+- Side.
+- Top.
+- A perspective view.
+- Sections when needed.
+- The assembly and an exploded view.
+
+Judge the model from the geometric check and the visual check together.
+
+Visual similarity does not replace engineering dimension checks.
+
+## F18 — Autonomous correction loop
+
+The basic loop:
+
+**Model → check → find a problem → analyze the cause → modify → check again**
+
+The system should be able to repeat that loop until:
+
+- The acceptance criteria are met.
+- The configured retry limit is reached.
+- A problem cannot be solved automatically.
+- The user needs to supply information or confirm design intent.
+
+Avoid an infinite loop and an uncontrolled large-scale rebuild.
+
+## F19 — User feedback and multi-turn iteration
+
+The user can request a change at any stage:
+
+"The enclosure is too thick."
+
+"There should be an opening here."
+
+"The screw boss should connect to the base."
+
+"I want this part to become a parametric model."
+
+The AI should understand the current project state and decide whether to edit an existing feature, edit the mesh, rebuild locally, or recreate the part.
+
+Prefer changing only the affected region, and keep other results that have already passed verification.
+
+---
+
+# 9. System architecture
+
+Suggested modules:
 
 ### Layer 1 — User Interface
 
-处理：
+Handles:
 
-- 自然语言交互。
-- 文件和图片输入。
-- 模型预览。
-- 零件列表。
-- 参数编辑。
-- 装配预览。
-- 执行进度与结果报告。
+- Natural-language interaction.
+- File and image input.
+- Model preview.
+- Part list.
+- Parameter editing.
+- Assembly preview.
+- Execution progress and the result report.
 
 ### Layer 2 — AI CAD Orchestrator
 
-负责：
+Responsible for:
 
-- 需求理解。
-- 模型分析决策。
-- 任务类型识别。
-- 工作计划。
-- SolidWorks / Blender 路由。
-- MCP 调度。
-- 错误恢复。
-- 自动验证和重试。
+- Understanding the request.
+- Model-analysis decisions.
+- Task-type recognition.
+- The work plan.
+- SolidWorks / Blender routing.
+- MCP dispatch.
+- Error recovery.
+- Automatic verification and retry.
 
 ### Layer 3 — Geometry & Reconstruction Engine
 
-负责：
+Responsible for:
 
-- 3MF / STL 文件解析。
-- 零件分离。
-- 几何特征识别。
-- 网格处理。
-- 参数化重建计划。
-- 装配关系推断。
-- 几何对比。
+- 3MF / STL parsing.
+- Part separation.
+- Geometric feature recognition.
+- Mesh processing.
+- The parametric reconstruction plan.
+- Assembly-relationship inference.
+- Geometric comparison.
 
 ### Layer 4 — CAD Execution
 
-通过 MCP 控制：
+Controls, through MCP:
 
-- SolidWorks。
-- Blender。
-- 相关转换和几何处理工具。
+- SolidWorks.
+- Blender.
+- Related conversion and geometry tools.
 
-负责实际创建、修改和保存模型。
+This layer creates, modifies, and saves the actual models.
 
 ### Layer 5 — Validation & Project Management
 
-负责：
+Responsible for:
 
-- 尺寸与形状验证。
-- 装配检查。
-- 结果截图。
-- 原始文件保留。
-- 项目版本管理。
-- 参数与零件映射。
-- 执行日志。
-- 结果报告。
-
----
-
-# 10. 典型端到端工作流
-
-## Workflow A — 纯文字自动建模
-
-输入：
-
-“创建一个可参数化的电机安装支架。”
-
-流程：
-
-需求解析 → SolidWorks 路由 → 参数化草图 → 建模 → 尺寸验证 → SLDPRT。
-
-## Workflow B — 图片参考建模
-
-输入：
-
-“参考这几张图片，做一个类似的模型。”
-
-流程：
-
-视觉分析 → 几何推断 → 软件选择 → 初步建模 → 多视角检查 → 迭代修正 → 原生工程文件。
-
-## Workflow C — 3MF 逆向重建并修改
-
-输入：
-
-“按照这个 3MF 重新建模，把外壳壁厚改成 3 mm，并增加四个安装柱。”
-
-流程：
-
-3MF 解析 → 零件识别 → 几何分析 → 参数化可行性判断 → SolidWorks 或 Blender 重建 → 修改目标结构 → 验证 → 导出。
-
-## Workflow D — 分件 3MF 自动装配
-
-输入：
-
-“这些零件来自 OrcaSlicer。帮我恢复原本装配关系，并生成 SolidWorks 装配体。”
-
-流程：
-
-解析打印板 → 提取零件 → 分析连接几何 → 推断装配位置 → 创建独立零件 → 创建 SLDASM → 检查装配 → 导出。
-
-## Workflow E — 多软件协作
-
-输入：
-
-“保留这个模型复杂的曲面造型，但把底部安装结构重做成参数化零件，并生成完整装配体。”
-
-流程：
-
-模型分析 → 零件级软件选择 → Blender 处理复杂曲面 → SolidWorks 重建机械结构 → 几何交换与协调 → 装配验证 → 输出多个原生工程文件。
-
-## Workflow F — 修改已有项目
-
-输入：
-
-“把我们之前建好的装配体外壳加高 10 mm，其他零件保持不变。”
-
-流程：
-
-读取项目状态 → 识别外壳 → 修改参数或局部重建 → 更新装配 → 验证相关零件 → 保存新版本。
+- Dimension and shape verification.
+- Assembly checks.
+- Result screenshots.
+- Retention of original files.
+- Project version management.
+- Parameter and part mapping.
+- Execution logs.
+- Result reports.
 
 ---
 
-# 11. 文件与状态管理
+# 10. Representative end-to-end workflows
 
-推荐项目目录：
+## Workflow A — Text-only automatic modeling
+
+Input:
+
+"Create a parametric motor-mount bracket."
+
+Flow:
+
+Parse the request → route to SolidWorks → parametric sketch → model → verify dimensions → SLDPRT.
+
+## Workflow B — Modeling from image references
+
+Input:
+
+"Use these pictures as a reference and make a similar model."
+
+Flow:
+
+Visual analysis → geometric inference → choose software → preliminary model → multi-view check → iterative correction → native project file.
+
+## Workflow C — Reverse-reconstruct a 3MF and modify it
+
+Input:
+
+"Rebuild from this 3MF, set the enclosure wall thickness to 3 mm, and add four mounting bosses."
+
+Flow:
+
+Parse the 3MF → identify parts → analyze geometry → judge parametric feasibility → rebuild in SolidWorks or Blender → modify the target structure → verify → export.
+
+## Workflow D — Automatic assembly from a split 3MF
+
+Input:
+
+"These parts came from OrcaSlicer. Restore the original assembly and generate a SolidWorks assembly."
+
+Flow:
+
+Parse the build plate → extract parts → analyze mating geometry → infer assembly positions → create separate parts → create an SLDASM → check the assembly → export.
+
+## Workflow E — Multi-application collaboration
+
+Input:
+
+"Keep this model's complex surface shape, rebuild the base mounting structure as parametric parts, and generate a complete assembly."
+
+Flow:
+
+Analyze the model → choose software per part → Blender handles the complex surfaces → SolidWorks rebuilds the mechanical structure → exchange and align geometry → verify the assembly → write several native project files.
+
+## Workflow F — Edit an existing project
+
+Input:
+
+"Raise the enclosure of the assembly we built earlier by 10 mm, and leave the other parts unchanged."
+
+Flow:
+
+Read project state → identify the enclosure → change parameters or rebuild locally → update the assembly → verify the related parts → save a new version.
+
+---
+
+# 11. Files and state
+
+Recommended project directory:
 
 ```text
 CAD-Project/
@@ -692,61 +692,61 @@ CAD-Project/
     └── final_report.md
 ```
 
-项目状态应持久化保存。
+Project state should be stored persistently.
 
-至少需要记录：
+At a minimum, record:
 
-- 输入文件来源。
-- 零件 ID 与对应的工程文件。
-- 原始尺寸及修改后的参数。
-- 当前主编辑格式。
-- 每个零件使用的建模工具。
-- 逆向重建完成程度。
-- 装配位置和约束。
-- 验证结果。
-- 不确定或尚未解决的问题。
+- Input file sources.
+- Part IDs and the corresponding project files.
+- Original dimensions and the parameters after edits.
+- The current primary editing format.
+- The modeling tool used for each part.
+- How complete the reverse reconstruction is.
+- Assembly positions and constraints.
+- Verification results.
+- Questions that are uncertain or still open.
 
 ---
 
-# 12. 功能优先级与开发阶段
+# 12. Priority and development phases
 
-| 阶段 | 目标 | 主要功能 |
+| Phase | Goal | Main capabilities |
 |---|---|---|
-| Phase 1 — Core Agent | 基础建模自动化 | 自然语言输入、软件选择、Blender/SW MCP 调度、从零建模、修改、保存 |
-| Phase 2 — Reconstruction | 可编辑模型重建 | 3MF 解析、分件、几何识别、网格重建、简单参数化逆向、重建后修改 |
-| Phase 3 — Assembly | 自动装配 | 装配位置推断、独立零件、SLDASM、Mates、装配验证 |
-| Phase 4 — Hybrid CAD | 跨软件协作 | 零件级路由、Blender/SW 混合工作流、几何交换 |
-| Phase 5 — Autonomous Refinement | 自主优化 | 自动验证、局部修正、版本恢复、多轮交互、完整项目管理 |
+| Phase 1 — Core Agent | Basic modeling automation | Natural-language input, software choice, Blender/SW MCP dispatch, modeling from scratch, edits, save |
+| Phase 2 — Reconstruction | Editable model reconstruction | 3MF parsing, part splitting, geometry recognition, mesh rebuild, simple parametric reverse engineering, edit after rebuild |
+| Phase 3 — Assembly | Automatic assembly | Assembly-position inference, separate parts, SLDASM, mates, assembly verification |
+| Phase 4 — Hybrid CAD | Cross-application collaboration | Per-part routing, mixed Blender/SW workflow, geometry exchange |
+| Phase 5 — Autonomous Refinement | Autonomous refinement | Automatic verification, local correction, version restore, multi-turn interaction, full project management |
 
-其中 Phase 1 和 Phase 2 是最有价值的基础能力。
+Phase 1 and Phase 2 are the most valuable foundation.
 
-## 13. 最终验收标准
+## 13. Final acceptance criteria
 
-系统至少应能够完成以下代表性任务：
+The system should at least complete these representative tasks:
 
-1. **纯文字建模：** 根据尺寸描述生成真正可参数化的 SolidWorks 零件。
-2. **图片建模：** 根据参考图片建立三维模型，明确报告无法确认的尺寸。
-3. **3MF 读取：** 正确识别切片软件项目中的独立产品零件。
-4. **逆向重建：** 将简单机械网格重建为包含可修改特征的 SolidWorks 零件。
-5. **重建后修改：** 根据用户要求直接生成修改后的重建模型。
-6. **Blender 路由：** 对复杂网格自动选择 Blender 并保存可继续编辑的工程文件。
-7. **自动装配：** 生成具有独立组件的 SLDASM，正确记录可确认的组件位置。
-8. **混合工作流：** 同一项目能够使用 SolidWorks 和 Blender 分别处理适合的零件。
-9. **自动验证：** 发现尺寸、几何或装配错误时进行修正或报告。
-10. **持续迭代：** 用户能够通过后续自然语言修改已有项目，而不必重复全部建模步骤。
+1. **Text-only modeling:** generate a genuinely parametric SolidWorks part from a dimension description.
+2. **Image modeling:** build a 3D model from reference images and explicitly report dimensions that cannot be confirmed.
+3. **3MF reading:** correctly identify the separate product parts in a slicer project.
+4. **Reverse reconstruction:** rebuild a simple mechanical mesh as a SolidWorks part with editable features.
+5. **Edit after reconstruction:** produce the modified rebuilt model directly from the user's request.
+6. **Blender routing:** choose Blender automatically for a complex mesh and save a project file that can still be edited.
+7. **Automatic assembly:** generate an SLDASM with separate components and record component positions that can be confirmed.
+8. **Mixed workflow:** use SolidWorks and Blender in the same project for the parts each one fits.
+9. **Automatic verification:** correct or report dimensional, geometric, or assembly errors when they are found.
+10. **Continued iteration:** the user can modify an existing project with later natural-language requests, without repeating the entire modeling sequence.
 
 ---
 
-# 14. 最终产品体验
+# 14. Product experience
 
-理想情况下，用户只需要：
+In the ideal case, the user only needs to:
 
-**上传文字、图片或模型 → 描述最终要求 → AI 自动理解任务 → 分析现有几何 → 决定直接修改还是重新建模 → 选择 SolidWorks/Blender → 自动执行 → 验证并修正 → 返回可编辑工程文件。**
+**Upload text, images, or a model → describe the desired result → the AI interprets the task → analyze the existing geometry → decide whether to edit directly or rebuild → choose SolidWorks or Blender → execute → verify and correct → return an editable project file.**
 
-对于切片软件导出的 3MF，系统不应停留在文件导入层面，而应能够以其为参考，重新设计可编辑的零件并在必要时完成装配。
+For a 3MF exported from a slicer, the system should use it as a reference, redesign editable parts, and assemble them when needed. It should not stop at importing the file.
 
-对于没有输入模型的任务，系统应能够直接从自然语言或图片创建新模型。
+When there is no input model, the system should create a new model directly from natural language or images.
 
-对于已经生成的项目，系统应继续理解和修改已有设计。
+When a project already exists, the system should keep understanding and modifying that design.
 
-**项目最终目标：打造一个具有自主规划、跨 CAD 软件协作、几何重建、参数修改、装配推断和自我验证能力的通用 AI 3D Modeling Agent。**
+**The end goal is a general AI 3D modeling agent that can plan on its own, collaborate across CAD applications, reconstruct geometry, change parameters, infer assemblies, and check its own results.**

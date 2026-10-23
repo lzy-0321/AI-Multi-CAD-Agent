@@ -22,12 +22,12 @@ bundle = dist / f'MultiCAD-{version}-windows'
 bundle.mkdir(exist_ok=True)
 for name in ('install.ps1', 'launch.ps1', 'bootstrap.py'):
     shutil.copy2(root / 'packaging' / name, bundle / name)
-quick_zh = (root / 'docs' / 'installation-quickstart.md').read_text(encoding='utf-8')
+quick_en = (root / 'docs' / 'installation-quickstart.md').read_text(encoding='utf-8')
 (bundle / 'QUICKSTART.md').write_text(
-    quick_zh.replace('](en/installation-quickstart.md)', '](QUICKSTART.en.md)'), encoding='utf-8')
-quick_en = (root / 'docs' / 'en' / 'installation-quickstart.md').read_text(encoding='utf-8')
-(bundle / 'QUICKSTART.en.md').write_text(
-    quick_en.replace('](../installation-quickstart.md)', '](QUICKSTART.md)'), encoding='utf-8')
+    quick_en.replace('](zh/installation-quickstart.md)', '](QUICKSTART.zh-CN.md)'), encoding='utf-8')
+quick_zh = (root / 'docs' / 'zh' / 'installation-quickstart.md').read_text(encoding='utf-8')
+(bundle / 'QUICKSTART.zh-CN.md').write_text(
+    quick_zh.replace('](../installation-quickstart.md)', '](QUICKSTART.md)'), encoding='utf-8')
 shutil.copy2(wheel, bundle / wheel.name)
 manifest = {'version': version, 'status': 'candidate', 'platform': 'windows',
             'cross_machine_verified': False, 'wheel': wheel.name,

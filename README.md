@@ -1,22 +1,22 @@
-**中文** | [English](docs/en/readme.md)
+**English** | [中文](README.zh-CN.md)
 
 # AI Multi-CAD Agent v0.2
 
-面向现有 AI Agent 的本地 CAD 工具系统。Agent 理解自然语言；本项目提供配置、能力发现、MCP 调度、项目版本和验证。无需额外模型 API，也不内置聊天模型。
+A local CAD tool system for an existing AI agent. The agent understands natural language; this project provides configuration, capability discovery, MCP dispatch, project versions, and verification. It needs no extra model API and does not embed a chat model.
 
-## 当前能力
+## Current capabilities
 
-- 用户独立配置与有限范围路径发现；可复用现有 Blender / SolidWorks stdio MCP。
-- 统一 MCP 入口，按需搜索工具及读取参数 schema；持久连接、串行执行、结果摘要和本地日志。
-- 已知只读操作最多重试一次；写操作不重放，超时或进程中断后需要检查实际状态并明确解除阻塞。
-- 限定底板的参数化创建、孔径修改、版本文件与重开检查；不是任意文字建模算法。
-- 原有 3MF 基础解析和 Blender 网格导出仍可使用。
+- Independent user configuration and limited path discovery. Existing Blender and SolidWorks stdio MCP servers can be reused.
+- One MCP entry point, with on-demand tool search and parameter schema reads. Connections stay open, calls run serially, and results are summarized in a local log.
+- Known read-only operations are retried at most once. Write operations are not replayed. After a timeout or a process interruption, check the actual state and explicitly clear the block.
+- Parametric creation, hole-diameter edits, version files, and reopen checks for one constrained base plate. This is not a general text-to-model algorithm.
+- The original basic 3MF parsing and Blender mesh export remain available.
 
-SolidWorks 使用现成的 [HarrierPigeon MCP](https://github.com/HarrierPigeon/Solidworks-MCP-Server)，Blender 使用 [ahujasid MCP](https://github.com/ahujasid/mcp-for-blender)。本项目不重写它们的建模工具。可选 SW 兼容宿主增加精确验收查询、模板路径配置和尺寸弹窗处理，上游源码保持原样。
+SolidWorks uses the existing [HarrierPigeon MCP](https://github.com/HarrierPigeon/Solidworks-MCP-Server). Blender uses [ahujasid MCP](https://github.com/ahujasid/mcp-for-blender). This project does not rewrite their modeling tools. An optional SolidWorks compatibility host adds exact acceptance queries, template-path configuration, and dimension-dialog handling. Upstream source stays unchanged.
 
-## 安装和配置
+## Install and configure
 
-Windows、Python 3.11+、本机已安装并可正常启动的 CAD 软件。在源码根目录：
+Windows, Python 3.11+, and CAD software that is already installed and can start. From the source root:
 
 ```powershell
 python -m venv .venv
@@ -25,28 +25,28 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m multi_cad doctor
 ```
 
-配置默认保存在 `%LOCALAPPDATA%\MultiCAD\config.json`，`MULTI_CAD_HOME` 可覆盖数据目录；`--config` 可覆盖配置文件位置。自动迁移当前目录的 `cad.local.json`，导入本项目旧 MCP 配置或用户已有 Codex 配置。发现不到或存在多个版本时才询问；无交互模式返回 `needs_input` 列表。失效的显式路径不会静默换成其他软件版本。
+Configuration is saved by default at `%LOCALAPPDATA%\MultiCAD\config.json`. `MULTI_CAD_HOME` overrides the data directory. `--config` overrides the configuration file location. A `cad.local.json` in the current directory is migrated automatically, and an older MCP configuration from this project or an existing Codex configuration can be imported. The setup asks only when nothing is found or more than one version exists. Non-interactive mode returns a `needs_input` list. An explicit path that no longer works is not silently replaced with another software version.
 
-复用任意目录下的现成 MCP：
+Reuse an existing MCP server from any directory:
 
 ```powershell
 python -m multi_cad setup --import-mcp "D:\settings\mcp.json" --blender-server blender --solidworks-server sw
 ```
 
-输入可以是通用 `mcpServers` JSON 或 Codex TOML。已有本机 backend 配置优先保留；更换后端需明确编辑本机配置或调用安装命令。MCP 命令、参数数组、工作目录、环境变量独立于 CAD 软件路径。Blender 仅支持本机 loopback 连接，端口可配置。
+The input can be a generic `mcpServers` JSON file or Codex TOML. An existing local backend configuration is kept. Changing a backend requires an explicit edit of the local configuration or an install command. The MCP command, argument array, working directory, and environment variables are independent of the CAD executable path. Blender accepts only a local loopback connection, and the port is configurable.
 
-缺少后端时，显式安装固定上游版本（需要网络和 Git）：
+When a backend is missing, explicitly install a pinned upstream version (network and Git required):
 
 ```powershell
 python -m multi_cad install-backend blender
 python -m multi_cad install-backend solidworks
 ```
 
-每次安装使用新目录，保留旧环境和配置备份；来源提交及实际依赖清单保存在安装目录。Blender 还需安装并启用上游插件：运行新环境中的 `mcp-for-blender.exe install-addon`，在目标 Blender 偏好设置启用插件。多版本先用其 `addon-paths` 确认目标。已有安装不自动重装。
+Each install uses a new directory and keeps the previous environment and configuration backup. The source commit and the actual dependency list are stored in the install directory. Blender also needs the upstream add-on installed and enabled: run `mcp-for-blender.exe install-addon` from the new environment, then enable the add-on in the target Blender preferences. With several Blender versions, confirm the target with `addon-paths` first. An existing install is not reinstalled automatically.
 
-## 接入 Agent
+## Connect an agent
 
-使用安装本项目的 Python 执行：
+Run these commands with the Python environment where this project is installed:
 
 ```powershell
 python -m multi_cad export-config "D:\settings\mcp.json"
@@ -54,17 +54,17 @@ python -m multi_cad export-config ".codex\config.toml" --format codex
 python -m multi_cad doctor --live
 ```
 
-导出只新增统一 `multi_cad` 服务，保留其他配置并备份；同名但不同设置报告冲突。重启 Agent 客户端后加载。日常只启用统一入口，旧的直接 CAD MCP 留作诊断，避免两个客户端同时修改同一个 CAD 会话。`doctor --live` 可能启动 CAD；未传 `--live` 不启动软件。已连接不等于建模已验证。
+Export adds only the unified `multi_cad` service, preserves the rest of the configuration, and writes a backup. A same-named entry with different settings is reported as a conflict. Restart the agent client to load it. For daily use, enable only the unified entry. Leave the older direct CAD MCP servers for diagnosis, so two clients do not modify the same CAD session. `doctor --live` may start CAD. Without `--live`, no CAD application is started. A successful connection does not mean modeling has been verified.
 
-Codex 可在导出命令后添加 `--disable-server 旧服务名`（可重复指定），仅停用明确指定的直接服务并保留原设置；不会修改其他服务器。
+For Codex, add `--disable-server OLD_SERVER_NAME` after the export command (the option can be repeated). It disables only the named direct server and keeps that server's original settings. Other servers are left unchanged.
 
-Agent 使用说明：[工具调用与项目流程](docs/agent-workflow.md)。首版支持 Windows 本地 stdio，提供 Codex TOML 和通用 JSON 配置，不保证每种客户端的配置文件布局相同。
+Agent instructions: [Tool calls and project flow](docs/agent-workflow.md). The first release supports local Windows stdio and provides Codex TOML plus generic JSON configuration. It does not assume every client uses the same configuration layout.
 
-## 参数化底板验收
+## Parametric base-plate acceptance
 
-底板 120 × 80 × 5 mm；四孔中心 (10,10)、(110,10)、(110,70)、(10,70) mm。高层配方只支持这个限定形状，其他任务由 Agent 搜索下游工具并规划。
+The plate is 120 × 80 × 5 mm. The four hole centers are (10,10), (110,10), (110,70), and (10,70) mm. This high-level recipe supports only that shape. For every other task, the agent searches downstream tools and plans the work.
 
-使用已有 SW MCP 源码时，启用可选兼容宿主（当前 Python 必须已装上游依赖）：
+When an existing SolidWorks MCP source tree is available, enable the optional compatibility host (the current Python must already have the upstream dependencies):
 
 ```powershell
 python -m multi_cad setup --use-sw-host "D:\MCP\Solidworks-MCP-Server" --part-template "D:\templates\Part.prtdot"
@@ -73,23 +73,23 @@ python -m multi_cad plate edit "runs\plate" --hole-diameter 8
 python -m multi_cad plate verify "runs\plate"
 ```
 
-每条命令可在新进程中执行。修改从已验证文件的工作副本开始，核对哈希、几何和完整参数映射；模糊映射会停止。新版本验证通过才登记。原版本不覆盖，失败文件另存并标记失败，不关用户其他文档。高层验收要求可选 `multi_cad_inspect_part` 能力；其他 MCP 可通过通用接口调用，但不能冒充通过此配方验收。
+Each command can run in a new process. An edit starts from a working copy of a verified file and checks the hash, the geometry, and the complete parameter map. An ambiguous map stops the command. A new version is registered only after verification succeeds. The previous version is not overwritten. A failed file is saved separately and marked failed. Other documents the user has open are left open. High-level acceptance requires the optional `multi_cad_inspect_part` capability. Other MCP servers can be called through the generic interface, but that does not count as passing this recipe.
 
-## 原有 3MF 流程与限制
+## Original 3MF flow and limits
 
 ```powershell
 python -m multi_cad analyse "source.3mf" --project "runs\mesh" --goal "保留独立对象"
 python -m multi_cad blender "runs\mesh" --executable "D:\Blender\blender.exe"
 ```
 
-3MF mesh resource 是候选资源，不是已确认产品零件。Bambu/Orca 专属 plate、modifier、support 分类、材质纹理、通用参数化逆向、装配推断尚未实现。打印变换与真实装配位置分开保存。截图不能代替尺寸验证。
+A 3MF mesh resource is a candidate resource, not a confirmed product part. Bambu/Orca plate membership, modifiers, support classification, materials and textures, general parametric reverse engineering, and assembly inference are not implemented yet. Print transforms are stored separately from real assembly positions. A screenshot does not replace dimensional verification.
 
-## 测试
+## Tests
 
 ```powershell
 python -m unittest discover -v
 ```
 
-测试需安装 `[mcp]` 依赖；协议测试使用假 MCP，不启动 CAD。实机验收单独执行上述底板流程。完整 schema 和日志留在本机缓存，查询结果默认截断并附文件引用。上下文体积报告使用字符/UTF-8 字节数，不冒称为实际模型 token 消耗。
+Tests need the `[mcp]` extra. Protocol tests use a fake MCP server and do not start CAD. On-machine acceptance is the base-plate flow above, run separately. Full schemas and logs stay in the local cache. Query results are truncated by default and include a file reference. Context-size reports use character and UTF-8 byte counts; they are not presented as actual model token usage.
 
-本机验收与限制：[v0.2 验证记录](docs/validation-v0.2.md)。安装包说明：[Windows 候选版安装指南](docs/installation-quickstart.md)。产品需求：[需求文档 v2](docs/requirements-v2.md)。
+On-machine acceptance and limits: [v0.2 validation record](docs/validation-v0.2.md). Release install guide: [Windows candidate installation guide](docs/installation-quickstart.md). Product requirements: [Requirements v2](docs/requirements-v2.md).
