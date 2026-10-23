@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+.venv/
+runs/
+*.egg-info/
+cad.local.json
+.venv-mcp/
+integrations/blender-mcp/
+integrations/solidworks-mcp/
+integrations/mcp.local.json
+integrations/codex.local.toml
+.codex/config.toml
+.codex/config.toml.*.bak
+build/
+dist/
