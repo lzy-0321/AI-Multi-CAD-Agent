@@ -35,9 +35,9 @@ manifest = {'version': version, 'status': 'candidate', 'platform': 'windows',
 (bundle / 'release.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding='utf-8')
 archive = dist / (bundle.name + '.zip')
 with zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED) as output:
-    for path in sorted(bundle.iterdir()):
-        if path.is_file():
-            output.write(path, bundle.name + '/' + path.name)
+    # Publish only named build outputs, never leftover local files in the staging directory.
+    for name in ('install.ps1', 'launch.ps1', 'bootstrap.py', 'QUICKSTART.md', 'QUICKSTART.zh-CN.md', 'release.json', wheel.name):
+        output.write(bundle / name, bundle.name + '/' + name)
 checksum = hashlib.sha256(archive.read_bytes()).hexdigest()
 archive.with_suffix('.zip.sha256').write_text(f'{checksum}  {archive.name}\n', encoding='ascii')
 print(json.dumps({'zip': str(archive), 'sha256': checksum}, indent=2))

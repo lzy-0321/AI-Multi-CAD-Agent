@@ -4,6 +4,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PAIRS = (
+    ('docs/zh/validation-v0.3.md', 'docs/validation-v0.3.md', '../validation-v0.3.md', 'zh/validation-v0.3.md'),
     ("README.zh-CN.md", "README.md", "README.md", "README.zh-CN.md"),
     ("docs/zh/installation-quickstart.md", "docs/installation-quickstart.md",
      "../installation-quickstart.md", "zh/installation-quickstart.md"),

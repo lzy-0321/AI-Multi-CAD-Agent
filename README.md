@@ -1,6 +1,6 @@
 **English** | [中文](README.zh-CN.md)
 
-# AI Multi-CAD Agent v0.2
+# AI Multi-CAD Agent v0.3.0rc1
 
 A local CAD tool system for an existing AI agent. The agent understands natural language; this project provides configuration, capability discovery, MCP dispatch, project versions, and verification. It needs no extra model API and does not embed a chat model.
 
@@ -15,6 +15,10 @@ A local CAD tool system for an existing AI agent. The agent understands natural 
 SolidWorks uses the existing [HarrierPigeon MCP](https://github.com/HarrierPigeon/Solidworks-MCP-Server). Blender uses [ahujasid MCP](https://github.com/ahujasid/mcp-for-blender). This project does not rewrite their modeling tools. An optional SolidWorks compatibility host adds exact acceptance queries, template-path configuration, and dimension-dialog handling. Upstream source stays unchanged.
 
 ## Install and configure
+
+For the Windows candidate, download `MultiCAD-0.3.0rc1-windows.zip` from [GitHub Releases](https://github.com/lzy-0321/AI-Multi-CAD-Agent/releases). Choose the named ZIP asset, not GitHub's automatic source archive. Follow the [installation guide](docs/installation-quickstart.md). It includes an isolated installer, repair preview, shareable diagnostics and rollback; no source checkout is required. See the [release notes and limitations](docs/releases/v0.3.0rc1.md). Real CAD acceptance on a second computer is pending.
+
+For development from source:
 
 Windows, Python 3.11+, and CAD software that is already installed and can start. From the source root:
 
@@ -39,7 +43,7 @@ When a backend is missing, explicitly install a pinned upstream version (network
 
 ```powershell
 python -m multi_cad install-backend blender
-python -m multi_cad install-backend solidworks
+python -m multi_cad install-backend solidworks --wheel "dist\ai_multi_cad_agent-0.3.0rc1-py3-none-any.whl"
 ```
 
 Each install uses a new directory and keeps the previous environment and configuration backup. The source commit and the actual dependency list are stored in the install directory. Blender also needs the upstream add-on installed and enabled: run `mcp-for-blender.exe install-addon` from the new environment, then enable the add-on in the target Blender preferences. With several Blender versions, confirm the target with `addon-paths` first. An existing install is not reinstalled automatically.

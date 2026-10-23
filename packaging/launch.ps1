@@ -11,8 +11,8 @@ $env:MULTI_CAD_WHEEL = $record.wheel
 $env:PYTHONUTF8 = '1'
 if (-not $ConfigPath) { $ConfigPath = Join-Path $PSScriptRoot 'config.json' }
 if ($Gateway) {
-    & $record.python -I -m multi_cad.gateway --config $ConfigPath
+    & $record.python -I -X utf8 -m multi_cad.gateway --config $ConfigPath
 } else {
-    & $record.python -I -m multi_cad --config $ConfigPath @Arguments
+    & $record.python -I -X utf8 -m multi_cad --config $ConfigPath @Arguments
 }
 exit $LASTEXITCODE
