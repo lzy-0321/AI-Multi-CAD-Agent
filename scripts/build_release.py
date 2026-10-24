@@ -1,4 +1,4 @@
-"""Build the Windows candidate ZIP and an external SHA-256 checksum."""
+"""Build a version-consistent Windows ZIP and external SHA-256 checksum."""
 import hashlib
 import json
 import shutil
@@ -11,8 +11,10 @@ from pathlib import Path
 root = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(root))
 from multi_cad.install import SOURCES
+from release_metadata import metadata
 
 version = tomllib.loads((root / 'pyproject.toml').read_text(encoding='utf-8'))['project']['version']
+release = metadata(version, 'v' + version)
 dist = root / 'dist'
 dist.mkdir(exist_ok=True)
 subprocess.run([sys.executable, '-m', 'pip', 'wheel', '--no-deps',
@@ -29,7 +31,7 @@ quick_zh = (root / 'docs' / 'zh' / 'installation-quickstart.md').read_text(encod
 (bundle / 'QUICKSTART.zh-CN.md').write_text(
     quick_zh.replace('](../installation-quickstart.md)', '](QUICKSTART.md)'), encoding='utf-8')
 shutil.copy2(wheel, bundle / wheel.name)
-manifest = {'version': version, 'status': 'candidate', 'platform': 'windows',
+manifest = {'version': version, 'status': release['status'], 'platform': 'windows',
             'cross_machine_verified': False, 'wheel': wheel.name,
             'sha256': hashlib.sha256(wheel.read_bytes()).hexdigest(), 'upstreams': SOURCES}
 (bundle / 'release.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding='utf-8')
