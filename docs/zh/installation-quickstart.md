@@ -1,8 +1,8 @@
 [English](../installation-quickstart.md) | **中文**
 
-# Multi-CAD Windows 候选版安装指南
+# Multi-CAD Windows 安装指南
 
-需要 Windows、64 位 Python 3.11+；实际建模还需要本机可用且已授权的 CAD。安装过程联网下载 Python 依赖，不捆绑 CAD、许可证或模型 API。候选版的第二台电脑实测尚未完成。
+需要 Windows、64 位 Python 3.11+；实际建模还需要本机可用且已授权的 CAD。安装过程联网下载 Python 依赖，不捆绑 CAD、许可证或模型 API。第二台电脑的 CAD 实测尚未完成。
 
 ## 安装程序
 

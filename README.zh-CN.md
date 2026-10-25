@@ -1,6 +1,6 @@
 [English](README.md) | **中文**
 
-# AI Multi-CAD Agent v0.3.0rc1
+# AI Multi-CAD Agent v0.3.1
 
 面向现有 AI Agent 的本地 CAD 工具系统。Agent 理解自然语言；本项目提供配置、能力发现、MCP 调度、项目版本和验证。无需额外模型 API，也不内置聊天模型。
 
@@ -16,7 +16,7 @@ SolidWorks 使用现成的 [HarrierPigeon MCP](https://github.com/HarrierPigeon/
 
 ## 安装和配置
 
-Windows 候选版请从 [GitHub Releases](https://github.com/lzy-0321/AI-Multi-CAD-Agent/releases) 下载 `MultiCAD-0.3.0rc1-windows.zip`，选择具名 ZIP 附件，而非 GitHub 自动生成的源码包。按[安装指南](docs/zh/installation-quickstart.md)操作，包含独立安装、修复预览、脱敏诊断和回滚，无需源码目录。详见[发布说明与限制](docs/releases/v0.3.0rc1.md)。本机隔离测试通过，异机实测待完成。
+Windows 正式版请从 [GitHub Releases](https://github.com/zyphlux/AI-Multi-CAD-Agent/releases) 下载 `MultiCAD-0.3.1-windows.zip`，选择具名 ZIP 附件，而非 GitHub 自动生成的源码包。按[安装指南](docs/zh/installation-quickstart.md)操作，包含独立安装、修复预览、脱敏诊断和回滚，无需源码目录。详见[发布说明与限制](docs/releases/v0.3.1.md)。本机隔离测试通过，异机实测待完成。
 
 以下为源码开发安装方式：
 
@@ -43,7 +43,7 @@ python -m multi_cad setup --import-mcp "D:\settings\mcp.json" --blender-server b
 
 ```powershell
 python -m multi_cad install-backend blender
-python -m multi_cad install-backend solidworks --wheel "dist\ai_multi_cad_agent-0.3.0rc1-py3-none-any.whl"
+python -m multi_cad install-backend solidworks --wheel "dist\ai_multi_cad_agent-0.3.1-py3-none-any.whl"
 ```
 
 每次安装使用新目录，保留旧环境和配置备份；来源提交及实际依赖清单保存在安装目录。Blender 还需安装并启用上游插件：运行新环境中的 `mcp-for-blender.exe install-addon`，在目标 Blender 偏好设置启用插件。多版本先用其 `addon-paths` 确认目标。已有安装不自动重装。
@@ -96,4 +96,4 @@ python -m unittest discover -v
 
 测试需安装 `[mcp]` 依赖；协议测试使用假 MCP，不启动 CAD。实机验收单独执行上述底板流程。完整 schema 和日志留在本机缓存，查询结果默认截断并附文件引用。上下文体积报告使用字符/UTF-8 字节数，不冒称为实际模型 token 消耗。
 
-本机验收与限制：[v0.2 验证记录](docs/zh/validation-v0.2.md)。安装包说明：[Windows 候选版安装指南](docs/zh/installation-quickstart.md)。产品需求：[需求文档 v2](docs/zh/requirements-v2.md)。
+本机验收与限制：[v0.2 验证记录](docs/zh/validation-v0.2.md)。安装包说明：[Windows 正式版安装指南](docs/zh/installation-quickstart.md)。产品需求：[需求文档 v2](docs/zh/requirements-v2.md)。

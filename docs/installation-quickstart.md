@@ -1,8 +1,8 @@
 **English** | [中文](zh/installation-quickstart.md)
 
-# Multi-CAD Windows candidate installation guide
+# Multi-CAD Windows installation guide
 
-Requires Windows and 64-bit Python 3.11+. Actual modeling also requires CAD that is available and licensed on this machine. Installation downloads Python dependencies over the network. It does not bundle CAD, a license, or a model API. End-to-end testing of this candidate on a second computer is not finished.
+Requires Windows and 64-bit Python 3.11+. Actual modeling also requires CAD that is available and licensed on this machine. Installation downloads Python dependencies over the network. It does not bundle CAD, a license, or a model API. End-to-end testing with CAD on a second computer is not finished.
 
 ## Installer
 

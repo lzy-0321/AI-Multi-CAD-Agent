@@ -1,6 +1,6 @@
 **English** | [中文](README.zh-CN.md)
 
-# AI Multi-CAD Agent v0.3.0rc1
+# AI Multi-CAD Agent v0.3.1
 
 A local CAD tool system for an existing AI agent. The agent understands natural language; this project provides configuration, capability discovery, MCP dispatch, project versions, and verification. It needs no extra model API and does not embed a chat model.
 
@@ -16,7 +16,7 @@ SolidWorks uses the existing [HarrierPigeon MCP](https://github.com/HarrierPigeo
 
 ## Install and configure
 
-For the Windows candidate, download `MultiCAD-0.3.0rc1-windows.zip` from [GitHub Releases](https://github.com/lzy-0321/AI-Multi-CAD-Agent/releases). Choose the named ZIP asset, not GitHub's automatic source archive. Follow the [installation guide](docs/installation-quickstart.md). It includes an isolated installer, repair preview, shareable diagnostics and rollback; no source checkout is required. See the [release notes and limitations](docs/releases/v0.3.0rc1.md). Real CAD acceptance on a second computer is pending.
+For the Windows release, download `MultiCAD-0.3.1-windows.zip` from [GitHub Releases](https://github.com/zyphlux/AI-Multi-CAD-Agent/releases). Choose the named ZIP asset, not GitHub's automatic source archive. Follow the [installation guide](docs/installation-quickstart.md). It includes an isolated installer, repair preview, shareable diagnostics and rollback; no source checkout is required. See the [release notes and limitations](docs/releases/v0.3.1.md). Real CAD acceptance on a second computer is pending.
 
 For development from source:
 
@@ -43,7 +43,7 @@ When a backend is missing, explicitly install a pinned upstream version (network
 
 ```powershell
 python -m multi_cad install-backend blender
-python -m multi_cad install-backend solidworks --wheel "dist\ai_multi_cad_agent-0.3.0rc1-py3-none-any.whl"
+python -m multi_cad install-backend solidworks --wheel "dist\ai_multi_cad_agent-0.3.1-py3-none-any.whl"
 ```
 
 Each install uses a new directory and keeps the previous environment and configuration backup. The source commit and the actual dependency list are stored in the install directory. Blender also needs the upstream add-on installed and enabled: run `mcp-for-blender.exe install-addon` from the new environment, then enable the add-on in the target Blender preferences. With several Blender versions, confirm the target with `addon-paths` first. An existing install is not reinstalled automatically.
@@ -96,4 +96,4 @@ python -m unittest discover -v
 
 Tests need the `[mcp]` extra. Protocol tests use a fake MCP server and do not start CAD. On-machine acceptance is the base-plate flow above, run separately. Full schemas and logs stay in the local cache. Query results are truncated by default and include a file reference. Context-size reports use character and UTF-8 byte counts; they are not presented as actual model token usage.
 
-On-machine acceptance and limits: [v0.2 validation record](docs/validation-v0.2.md). Release install guide: [Windows candidate installation guide](docs/installation-quickstart.md). Product requirements: [Requirements v2](docs/requirements-v2.md).
+On-machine acceptance and limits: [v0.2 validation record](docs/validation-v0.2.md). Release install guide: [Windows release installation guide](docs/installation-quickstart.md). Product requirements: [Requirements v2](docs/requirements-v2.md).
