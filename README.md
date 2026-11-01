@@ -1,6 +1,6 @@
 **English** | [中文](README.zh-CN.md)
 
-# AI Multi-CAD Agent v0.3.1
+# AI Multi-CAD Agent v0.4.0
 
 A local CAD tool system for an existing AI agent. The agent understands natural language; this project provides configuration, capability discovery, MCP dispatch, project versions, and verification. It needs no extra model API and does not embed a chat model.
 
@@ -10,13 +10,14 @@ A local CAD tool system for an existing AI agent. The agent understands natural 
 - One MCP entry point, with on-demand tool search and parameter schema reads. Connections stay open, calls run serially, and results are summarized in a local log.
 - Known read-only operations are retried at most once. Write operations are not replayed. After a timeout or a process interruption, check the actual state and explicitly clear the block.
 - Parametric creation, hole-diameter edits, version files, and reopen checks for one constrained base plate. This is not a general text-to-model algorithm.
-- The original basic 3MF parsing and Blender mesh export remain available.
+- Selected-part 3MF editing: slicer roles/plates, explicit instance scope, Blender transforms and cylindrical cuts, bounded SW plate/washer reconstruction, immutable versions and reopen checks. See [part workflow](docs/parts-workflow.md).
+- Version 0.4.0 ships selected-part editing; see the [acceptance record](docs/validation-v0.4.md) for coverage and limitations.
 
 SolidWorks uses the existing [HarrierPigeon MCP](https://github.com/HarrierPigeon/Solidworks-MCP-Server). Blender uses [ahujasid MCP](https://github.com/ahujasid/mcp-for-blender). This project does not rewrite their modeling tools. An optional SolidWorks compatibility host adds exact acceptance queries, template-path configuration, and dimension-dialog handling. Upstream source stays unchanged.
 
 ## Install and configure
 
-For the Windows release, download `MultiCAD-0.3.1-windows.zip` from [GitHub Releases](https://github.com/zyphlux/AI-Multi-CAD-Agent/releases). Choose the named ZIP asset, not GitHub's automatic source archive. Follow the [installation guide](docs/installation-quickstart.md). It includes an isolated installer, repair preview, shareable diagnostics and rollback; no source checkout is required. See the [release notes and limitations](docs/releases/v0.3.1.md). Real CAD acceptance on a second computer is pending.
+For the Windows release, download `MultiCAD-0.4.0-windows.zip` from [GitHub Releases](https://github.com/zyphlux/AI-Multi-CAD-Agent/releases). Choose the named ZIP asset, not GitHub's automatic source archive. Follow the [installation guide](docs/installation-quickstart.md). It includes an isolated installer, repair preview, shareable diagnostics and rollback; no source checkout is required. See the [release notes and limitations](docs/releases/v0.4.0.md). Real CAD acceptance on a second computer is pending.
 
 For development from source:
 
@@ -43,7 +44,7 @@ When a backend is missing, explicitly install a pinned upstream version (network
 
 ```powershell
 python -m multi_cad install-backend blender
-python -m multi_cad install-backend solidworks --wheel "dist\ai_multi_cad_agent-0.3.1-py3-none-any.whl"
+python -m multi_cad install-backend solidworks --wheel "dist\ai_multi_cad_agent-0.4.0-py3-none-any.whl"
 ```
 
 Each install uses a new directory and keeps the previous environment and configuration backup. The source commit and the actual dependency list are stored in the install directory. Blender also needs the upstream add-on installed and enabled: run `mcp-for-blender.exe install-addon` from the new environment, then enable the add-on in the target Blender preferences. With several Blender versions, confirm the target with `addon-paths` first. An existing install is not reinstalled automatically.
@@ -86,7 +87,7 @@ python -m multi_cad analyse "source.3mf" --project "runs\mesh" --goal "保留独
 python -m multi_cad blender "runs\mesh" --executable "D:\Blender\blender.exe"
 ```
 
-A 3MF mesh resource is a candidate resource, not a confirmed product part. Bambu/Orca plate membership, modifiers, support classification, materials and textures, general parametric reverse engineering, and assembly inference are not implemented yet. Print transforms are stored separately from real assembly positions. A screenshot does not replace dimensional verification.
+A 3MF mesh resource is a candidate resource, not a confirmed product part. Slicer plate membership and declared part/negative roles are parsed; unknown roles are retained and block unsafe edits. Materials/textures, general reverse engineering and assembly inference remain unsupported. Print transforms are stored separately from real assembly positions. A screenshot does not replace dimensional verification.
 
 ## Tests
 

@@ -42,6 +42,11 @@ def main():
         previous = app.GetUserPreferenceToggle(10)  # swInputDimValOnCreate, local swconst typelib
         app.SetUserPreferenceToggle(10, False)
         try:
+            # Upstream selects by coordinate using the current view's pick
+            # tolerance. Fit small profiles before selecting their segments.
+            doc = self.connection.get_active_doc()
+            if doc:
+                doc.ViewZoomtofit2()
             return original_dimension(self, values)
         finally:
             app.SetUserPreferenceToggle(10, previous)

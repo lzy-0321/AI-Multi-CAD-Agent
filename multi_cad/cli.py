@@ -21,6 +21,9 @@ def blender_path(explicit=None, config_path=None):
 def export_blender(project, executable):
     project = Path(project).resolve()
     state = json.loads((project / "project.json").read_text(encoding="utf-8"))
+    manifest = json.loads((project / 'analysis/source_manifest.json').read_text(encoding='utf-8'))
+    if any(i.get('role', 'normal_part') != 'normal_part' for i in manifest['instances']):
+        raise ValueError('This source contains negative or auxiliary volumes; use project parts operations to preserve their semantics')
     if state["stages"]["analysis"] != "complete":
         raise ValueError("Complete analysis before exporting")
     output = project / "output/blender/Project.blend"
@@ -92,6 +95,9 @@ def main():
     plate.add_argument("action", choices=["create", "edit", "verify"])
     plate.add_argument("project")
     plate.add_argument("--hole-diameter", type=float, default=6)
+    parts = commands.add_parser('parts', help='Invoke a project operation using a local JSON arguments file')
+    parts.add_argument('operation')
+    parts.add_argument('--arguments', required=True)
     args = parser.parse_args()
     try:
         if args.command == "analyse":
@@ -163,6 +169,9 @@ def main():
             async def run():
                 gateway = Gateway(config.load(args.config))
                 try:
+                    if args.command == 'parts':
+                        return await gateway.execute('project', [{'operation': args.operation,
+                            'arguments': json.loads(Path(args.arguments).read_text(encoding='utf-8-sig'))}])
                     if args.command == "doctor":
                         return await gateway.status(True)
                     from .plate import run_plate
@@ -174,5 +183,7 @@ def main():
                 from .diagnostics import report, save_report
                 result = save_report(args.report, result) if args.report else report(result)
             print(json.dumps(result, ensure_ascii=False, indent=2))
+            if args.command == 'parts' and any(not item['ok'] for item in result['results']):
+                parser.exit(1, 'Part operation failed; see the result above and local project reports.\n')
     except (ValueError, RuntimeError, OSError, KeyError, subprocess.SubprocessError) as error:
         parser.exit(1, f"Error: {error}\n")

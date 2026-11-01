@@ -1,6 +1,6 @@
 [English](README.md) | **中文**
 
-# AI Multi-CAD Agent v0.3.1
+# AI Multi-CAD Agent v0.4.0
 
 面向现有 AI Agent 的本地 CAD 工具系统。Agent 理解自然语言；本项目提供配置、能力发现、MCP 调度、项目版本和验证。无需额外模型 API，也不内置聊天模型。
 
@@ -10,13 +10,14 @@
 - 统一 MCP 入口，按需搜索工具及读取参数 schema；持久连接、串行执行、结果摘要和本地日志。
 - 已知只读操作最多重试一次；写操作不重放，超时或进程中断后需要检查实际状态并明确解除阻塞。
 - 限定底板的参数化创建、孔径修改、版本文件与重开检查；不是任意文字建模算法。
-- 原有 3MF 基础解析和 Blender 网格导出仍可使用。
+- 按 part 局部编辑：切片类型和打印板解析、明确实例范围、Blender 变换与圆柱切孔、限定 SW 平板／垫圈重建、版本保存及重开核验。见[局部修改流程](docs/zh/parts-workflow.md)。
+- 0.4.0 提供本轮局部修改功能，实测范围与限制见[验收记录](docs/zh/validation-v0.4.md)。
 
 SolidWorks 使用现成的 [HarrierPigeon MCP](https://github.com/HarrierPigeon/Solidworks-MCP-Server)，Blender 使用 [ahujasid MCP](https://github.com/ahujasid/mcp-for-blender)。本项目不重写它们的建模工具。可选 SW 兼容宿主增加精确验收查询、模板路径配置和尺寸弹窗处理，上游源码保持原样。
 
 ## 安装和配置
 
-Windows 正式版请从 [GitHub Releases](https://github.com/zyphlux/AI-Multi-CAD-Agent/releases) 下载 `MultiCAD-0.3.1-windows.zip`，选择具名 ZIP 附件，而非 GitHub 自动生成的源码包。按[安装指南](docs/zh/installation-quickstart.md)操作，包含独立安装、修复预览、脱敏诊断和回滚，无需源码目录。详见[发布说明与限制](docs/releases/v0.3.1.md)。本机隔离测试通过，异机实测待完成。
+Windows 正式版请从 [GitHub Releases](https://github.com/zyphlux/AI-Multi-CAD-Agent/releases) 下载 `MultiCAD-0.4.0-windows.zip`，选择具名 ZIP 附件，而非 GitHub 自动生成的源码包。按[安装指南](docs/zh/installation-quickstart.md)操作，包含独立安装、修复预览、脱敏诊断和回滚，无需源码目录。详见[发布说明与限制](docs/releases/v0.4.0.md)。本机隔离测试通过，异机实测待完成。
 
 以下为源码开发安装方式：
 
@@ -43,7 +44,7 @@ python -m multi_cad setup --import-mcp "D:\settings\mcp.json" --blender-server b
 
 ```powershell
 python -m multi_cad install-backend blender
-python -m multi_cad install-backend solidworks --wheel "dist\ai_multi_cad_agent-0.3.1-py3-none-any.whl"
+python -m multi_cad install-backend solidworks --wheel "dist\ai_multi_cad_agent-0.4.0-py3-none-any.whl"
 ```
 
 每次安装使用新目录，保留旧环境和配置备份；来源提交及实际依赖清单保存在安装目录。Blender 还需安装并启用上游插件：运行新环境中的 `mcp-for-blender.exe install-addon`，在目标 Blender 偏好设置启用插件。多版本先用其 `addon-paths` 确认目标。已有安装不自动重装。
@@ -86,7 +87,7 @@ python -m multi_cad analyse "source.3mf" --project "runs\mesh" --goal "保留独
 python -m multi_cad blender "runs\mesh" --executable "D:\Blender\blender.exe"
 ```
 
-3MF mesh resource 是候选资源，不是已确认产品零件。Bambu/Orca 专属 plate、modifier、support 分类、材质纹理、通用参数化逆向、装配推断尚未实现。打印变换与真实装配位置分开保存。截图不能代替尺寸验证。
+3MF mesh resource 是候选资源，不是已确认产品零件。现已读取切片打印板归属及声明的 part／负体积类型；未知类型保留并阻止不可靠修改。材质纹理、通用参数化逆向、装配推断尚未实现。打印变换与真实装配位置分开保存。截图不能代替尺寸验证。
 
 ## 测试
 

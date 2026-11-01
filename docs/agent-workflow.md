@@ -31,3 +31,5 @@ The user entry point is the existing MCP agent. Do not show underlying tool name
 Each new connection refreshes schemas. Within a connection they expire after five minutes, and a live check refreshes them too. The cache includes version, configuration, and tool-list fingerprints. It does not mean the current connection is healthy. Each user holds one process lock per backend gateway.
 
 Load only the unified entry point and the schemas for the current task. Large results are truncated. Read the full result from the artifact file when needed. Images are only a supplement to the geometry check.
+
+For selected-part source analysis, bounded edits and native reconstruction, see the [part workflow](parts-workflow.md).

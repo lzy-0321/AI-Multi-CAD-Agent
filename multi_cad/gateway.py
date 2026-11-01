@@ -52,6 +52,11 @@ class Gateway:
         return status
 
     async def search(self, backend_name, query="", limit=8):
+        if backend_name == 'project':
+            from .parts import definitions
+            terms = query.lower().split()
+            matches = [t for t in definitions().values() if not terms or any(w in (t['name']+' '+t['description']).lower() for w in terms)]
+            return [{k: t[k] for k in ('name', 'description')} for t in matches[:max(1, min(limit, 20))]]
         backend = self.backend(backend_name)
         async with backend.operation_lock:
             await backend.request("catalog")
@@ -66,6 +71,9 @@ class Gateway:
         return [{"name": t["name"], "description": (t.get("description") or "")[:180]} for _, t in matches[:max(1, min(limit, 20))]]
 
     async def schema(self, backend_name, operation):
+        if backend_name == 'project':
+            from .parts import definitions
+            return definitions()[operation]
         backend = self.backend(backend_name)
         async with backend.operation_lock:
             await backend.request("catalog")
@@ -76,6 +84,23 @@ class Gateway:
     async def execute(self, backend_name, calls):
         if not 1 <= len(calls) <= 25:
             raise ValueError("Batch size must be 1..25; dependent IDs require separate batches")
+        if backend_name == 'project':
+            from .parts import definitions, execute
+            from jsonschema import validate as validate_arguments
+            results = []
+            for call in calls:
+                try:
+                    definition = definitions()[call['operation']]
+                    arguments = call.get('arguments', {})
+                    validate_arguments(arguments, definition['inputSchema'])
+                    data = await execute(self, call['operation'], arguments)
+                    result = {'ok': data.get('ok', True), 'data': data}
+                except Exception as error:
+                    result = {'ok': False, 'error': str(error)}
+                results.append(result)
+                if not result['ok']:
+                    break
+            return {'results': results, 'skipped': len(calls)-len(results)}
         backend = self.backend(backend_name)
         results = []
         async with backend.operation_lock:
@@ -111,7 +136,7 @@ def create_server(config_path=None):
 
     @mcp.tool()
     async def capability_search(backend: str, query: str = "", limit: int = 8) -> list:
-        """Find operations using short English keywords; returns summaries, not full schemas."""
+        """Find operations using short English keywords. backend: project, blender or solidworks. Returns summaries, not full schemas."""
         return await gateway.search(backend, query, limit)
 
     @mcp.tool()

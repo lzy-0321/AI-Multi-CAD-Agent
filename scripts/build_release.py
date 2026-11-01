@@ -31,6 +31,10 @@ quick_zh = (root / 'docs' / 'zh' / 'installation-quickstart.md').read_text(encod
 (bundle / 'QUICKSTART.zh-CN.md').write_text(
     quick_zh.replace('](../installation-quickstart.md)', '](QUICKSTART.md)'), encoding='utf-8')
 shutil.copy2(wheel, bundle / wheel.name)
+for source, filename, old_link, new_link in (
+        ('docs/parts-workflow.md', 'PARTS.md', '](zh/parts-workflow.md)', '](PARTS.zh-CN.md)'),
+        ('docs/zh/parts-workflow.md', 'PARTS.zh-CN.md', '](../parts-workflow.md)', '](PARTS.md)')):
+    (bundle / filename).write_text((root / source).read_text(encoding='utf-8').replace(old_link, new_link), encoding='utf-8')
 manifest = {'version': version, 'status': release['status'], 'platform': 'windows',
             'cross_machine_verified': False, 'wheel': wheel.name,
             'sha256': hashlib.sha256(wheel.read_bytes()).hexdigest(), 'upstreams': SOURCES}
@@ -38,7 +42,7 @@ manifest = {'version': version, 'status': release['status'], 'platform': 'window
 archive = dist / (bundle.name + '.zip')
 with zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED) as output:
     # Publish only named build outputs, never leftover local files in the staging directory.
-    for name in ('install.ps1', 'launch.ps1', 'bootstrap.py', 'QUICKSTART.md', 'QUICKSTART.zh-CN.md', 'release.json', wheel.name):
+    for name in ('install.ps1', 'launch.ps1', 'bootstrap.py', 'QUICKSTART.md', 'QUICKSTART.zh-CN.md', 'PARTS.md', 'PARTS.zh-CN.md', 'release.json', wheel.name):
         output.write(bundle / name, bundle.name + '/' + name)
 checksum = hashlib.sha256(archive.read_bytes()).hexdigest()
 archive.with_suffix('.zip.sha256').write_text(f'{checksum}  {archive.name}\n', encoding='ascii')

@@ -7,6 +7,7 @@ import hashlib
 import math
 import posixpath
 import zipfile
+from pathlib import Path
 from collections import Counter
 from urllib.parse import unquote
 from xml.etree import ElementTree as ET
@@ -185,6 +186,9 @@ def analyse(path):
         for rid, resource in resources.items():
             resource["instance_count"] = counts[rid]
         metadata = {m.get("name", ""): m.text for m in root.findall("c:metadata", NS)}
-        return {"schema_version": 1, "unit": "mm", "root_model": root_path,
+        result = {"schema_version": 1, "unit": "mm", "root_model": root_path,
                 "metadata": metadata, "package_entries": names, "plates": None,
                 "resources": list(resources.values()), "instances": instances, "warnings": warnings}
+        from .slicer import enrich
+        settings = xml(archive.read('Metadata/model_settings.config')) if 'Metadata/model_settings.config' in names else None
+        return enrich(result, settings, hashlib.sha256(Path(path).read_bytes()).hexdigest())

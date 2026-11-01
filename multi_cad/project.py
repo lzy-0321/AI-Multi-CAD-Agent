@@ -53,6 +53,7 @@ def resume_analysis(destination):
                 for t in resource["triangles"]:
                     stream.write("f " + " ".join(str(i+1) for i in t) + "\n")
         write_json(destination / "analysis/source_manifest.json", manifest)
+        state['manifest_sha256'] = hashlib.sha256((destination / 'analysis/source_manifest.json').read_bytes()).hexdigest()
         mechanical = any(word in state["goal"].lower() for word in ("参数", "孔", "公差", "机械", "solidworks", "parametric"))
         plan = {"kind": "rule_based_baseline", "goal": state["goal"],
                 "requested_backend": "solidworks" if mechanical else "blender",

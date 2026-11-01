@@ -32,7 +32,7 @@ def response_data(result):
             payload = json.loads(text)
         except (ValueError, TypeError):
             payload = {"text": text}
-    failed = bool(data.get("isError")) or bool(re.search(r"(?im)^\s*(?:❌|error\b|failed\b|failure\b)", text))
+    failed = bool(data.get("isError")) or bool(re.search(r"(?im)^\s*(?:❌|error\b|failed\b|failure\b|rejected\b)", text))
     if isinstance(payload, dict):
         failed |= bool(payload.get("error")) or payload.get("success") is False
         failed |= payload.get("status") in ("error", "failed")

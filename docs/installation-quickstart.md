@@ -2,6 +2,8 @@
 
 # Multi-CAD Windows installation guide
 
+Version 0.4.0 also includes `PARTS.md` and `PARTS.zh-CN.md` in the ZIP for selected-part editing. The Blender MCP add-on must be running. If a separately installed SW compatibility host still uses an older wheel, update that backend explicitly with the new wheel; upgrading the gateway alone does not replace existing MCP environments.
+
 Requires Windows and 64-bit Python 3.11+. Actual modeling also requires CAD that is available and licensed on this machine. Installation downloads Python dependencies over the network. It does not bundle CAD, a license, or a model API. End-to-end testing with CAD on a second computer is not finished.
 
 ## Installer

@@ -2,6 +2,8 @@
 
 # Multi-CAD Windows 安装指南
 
+0.4.0 ZIP 同时包含局部修改指南 `PARTS.md` 和 `PARTS.zh-CN.md`。需要启动 Blender MCP 插件。如果独立安装的 SW 兼容宿主仍使用旧 wheel，请明确使用新 wheel 更新该后端；只升级网关不会替换已有 MCP 环境。
+
 需要 Windows、64 位 Python 3.11+；实际建模还需要本机可用且已授权的 CAD。安装过程联网下载 Python 依赖，不捆绑 CAD、许可证或模型 API。第二台电脑的 CAD 实测尚未完成。
 
 ## 安装程序
